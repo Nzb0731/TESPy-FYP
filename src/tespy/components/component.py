@@ -12,8 +12,6 @@ available from its original location tespy/components/components.py
 SPDX-License-Identifier: MIT
 """
 
-from collections import OrderedDict
-
 import numpy as np
 
 from tespy.tools import logger
@@ -32,7 +30,7 @@ from tespy.tools.global_vars import ERR
 from tespy.tools.helpers import _numeric_deriv
 from tespy.tools.helpers import bus_char_derivative
 from tespy.tools.helpers import bus_char_evaluation
-from tespy.tools.helpers import newton
+from tespy.tools.helpers import newton_with_kwargs
 
 
 class Component:
@@ -122,7 +120,7 @@ class Component:
         self.fkt_group = self.label
 
         # add container for components attributes
-        self.parameters = OrderedDict(self.get_parameters().copy())
+        self.parameters = self.get_parameters().copy()
         self.__dict__.update(self.parameters)
         self.set_attr(**kwargs)
 
@@ -342,7 +340,7 @@ class Component:
         self.num_eq = 0
         self.vars = {}
         self.num_vars = 0
-        self.constraints = OrderedDict(self.get_mandatory_constraints().copy())
+        self.constraints = self.get_mandatory_constraints().copy()
         self.prop_specifications = {}
         self.var_specifications = {}
         self.group_specifications = {}
@@ -415,7 +413,7 @@ class Component:
             if data.is_set and data.func is not None:
                 self.num_eq += data.num_eq
 
-        self.jacobian = OrderedDict()
+        self.jacobian = {}
         self.residual = np.zeros(self.num_eq)
 
         sum_eq = 0
@@ -644,11 +642,21 @@ class Component:
             if b['base'] == 'component':
                 return abs(comp_val / b['P_ref'])
             else:
-                bus_value = newton(
-                    bus_char_evaluation,
-                    bus_char_derivative,
-                    [comp_val, b['P_ref'], b['char']], 0,
-                    val0=b['P_ref'], valmin=-1e15, valmax=1e15)
+                kwargs = {
+                    "function": bus_char_evaluation,
+                    "parameter": "bus_value",
+                    "component_value": comp_val,
+                    "reference_value": b["P_ref"],
+                    "char_func": b["char"]
+                }
+                bus_value = newton_with_kwargs(
+                    derivative=bus_char_derivative,
+                    target_value=0,
+                    val0=b['P_ref'],
+                    valmin=-1e15,
+                    valmax=1e15,
+                    **kwargs
+                )
                 return bus_value / b['P_ref']
 
     def calc_bus_efficiency(self, bus):
@@ -813,18 +821,18 @@ class Component:
             if isinstance(data, dc_cp):
                 if data.val > data.max_val + ERR :
                     msg = (
-                        'Invalid value for ' + p + ': ' + p + ' = ' +
-                        str(data.val) + ' above maximum value (' +
-                        str(data.max_val) + ') at component ' + self.label +
-                        '.')
+                        f"Invalid value for {p}: {p} = {data.val} above "
+                        f"maximum value ({data.max_val}) at component "
+                        f"{self.label}."
+                    )
                     logger.warning(msg)
 
                 elif data.val < data.min_val - ERR :
                     msg = (
-                        'Invalid value for ' + p + ': ' + p + ' = ' +
-                        str(data.val) + ' below minimum value (' +
-                        str(data.min_val) + ') at component ' + self.label +
-                        '.')
+                        f"Invalid value for {p}: {p} = {data.val} below "
+                        f"minimum value ({data.max_val}) at component "
+                        f"{self.label}."
+                    )
                     logger.warning(msg)
 
             elif isinstance(data, dc_cc) and data.is_set:
@@ -968,7 +976,8 @@ class Component:
             indices = str(indices[0])
         latex = (
             r'0=h_{\mathrm{in,}i}-h_{\mathrm{out,}i}'
-            r'\; \forall i \in [' + indices + r']')
+            r'\; \forall i \in [' + indices + r']'
+        )
         return generate_latex_eq(self, latex, label)
 
     def enthalpy_equality_deriv(self, k):
@@ -1021,8 +1030,7 @@ class Component:
                 0 = p_{in} \cdot pr - p_{out}
         """
         pr = self.get_attr(pr)
-        return (self.inl[inconn].p.val_SI * pr.val -
-                self.outl[outconn].p.val_SI)
+        return self.inl[inconn].p.val_SI * pr.val - self.outl[outconn].p.val_SI
 
     def pr_func_doc(self, label, pr='', inconn=0, outconn=0):
         r"""
@@ -1082,6 +1090,15 @@ class Component:
             self.jacobian[k, o.p.J_col] = -1
         if pr.is_var:
             self.jacobian[k, self.pr.J_col] = i.p.val_SI
+
+    def calc_zeta(self, i, o):
+        if abs(i.m.val_SI) <= 1e-4:
+            return 0
+        else:
+            return (
+                (i.p.val_SI - o.p.val_SI) * np.pi ** 2
+                / (4 * i.m.val_SI ** 2 * (i.vol.val_SI + o.vol.val_SI))
+            )
 
     def zeta_func(self, zeta='', inconn=0, outconn=0):
         r"""
