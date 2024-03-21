@@ -116,7 +116,7 @@ for M in data['m_workingfluid']:
     c1.set_attr(m=M)
     my_plant.solve('design')
     eta['m_workingfluid'] += [abs(powergen.P.val) / sg.Q.val * 100]
-    power['m_workingfluid'] += [abs(powergen.P.val) / 1e6]
+    power['m_workingfluid'] += [abs(powergen.P.val) / 1e3]
 
 # Step 3: Reset to base working fluid flow rate
 # Reset the working fluid flow rate to the base value for the next parametric study.
@@ -128,7 +128,7 @@ for P in data['P_boiler']:
     c1.set_attr(p=P)
     my_plant.solve('design')
     eta['P_boiler'] += [abs(powergen.P.val) / sg.Q.val * 100]
-    power['P_boiler'] += [abs(powergen.P.val) / 1e6]
+    power['P_boiler'] += [abs(powergen.P.val) / 1e3]
 
 # reset to base boiler pressure
 c1.set_attr(p=30)
@@ -139,7 +139,7 @@ for P in data['P_condenser']:
     c2.set_attr(p=P)
     my_plant.solve('design')
     eta['P_condenser'] += [abs(powergen.P.val) / sg.Q.val * 100]
-    power['P_condenser'] += [abs(powergen.P.val) / 1e6]
+    power['P_condenser'] += [abs(powergen.P.val) / 1e3]
 
 # reset to base pressure
 c2.set_attr(p=7)
@@ -151,7 +151,7 @@ for M in data['m_coolingfluid']:
     c11.set_attr(m=M)
     my_plant.solve('design')
     eta['m_coolingfluid'] += [abs(powergen.P.val) / sg.Q.val * 100]
-    power['m_coolingfluid'] += [abs(powergen.P.val) / 1e6]
+    power['m_coolingfluid'] += [abs(powergen.P.val) / 1e3]
 
 # reset to base condition
 c12.set_attr(T=25)
@@ -170,12 +170,12 @@ for key in data:
     ax[i + 4].scatter(data[key], power[key], s=100, color="#18a999")
     i += 1
 
-ax[0].set_ylabel('Efficiency in %')
-ax[4].set_ylabel('Power in MW')
+ax[0].set_ylabel('Efficiency (%))')
+ax[4].set_ylabel('Power (kW)')
 ax[4].set_xlabel('Working Fluid Flow Rate (kg/s)')
 ax[5].set_xlabel('Boiler Pressure (bar)')
 ax[6].set_xlabel('Condenser Pressure (bar)')
 ax[7].set_xlabel('Cooling Fluid Flow Rate (kg/s)')
 plt.tight_layout()
-fig.savefig('trial.svg')
+fig.savefig('trial1.svg')
 plt.close()
