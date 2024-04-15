@@ -40,7 +40,7 @@ fp.set_attr(eta_s=0.75)
 
 c11.set_attr(T=20, p=1.2, fluid={'water': 1})
 c12.set_attr(T=30)
-c1.set_attr(T=600, p=150, m=10, fluid={'water': 1})
+c1.set_attr(T=600, p=150, m=10, fluid={'R1234yf': 1})
 c2.set_attr(p=0.1)
 
 my_plant.solve(mode='design')
