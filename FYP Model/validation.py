@@ -37,16 +37,20 @@ c22 = Connection(sg, 'out2', stsi, 'in1', label='22')
 
 my_plant.add_conns(c11, c12)
 my_plant.add_conns(c21, c22)
+
 # %%[sec_3]
-mc.set_attr(pr1=1, pr2=0.98)
-sg.set_attr(pr=0.9)
-tu.set_attr(eta_s=0.9)
-fp.set_attr(eta_s=0.75)
+# Setting component and connection attributes
+mc.set_attr(pr1=0.98, pr2=1) # Setting pressure ratios for main condenser
+sg.set_attr(pr1=0.98, pr2=1) # Setting pressure ratios for steam generator
+tu.set_attr(eta_s=0.9) # Setting isentropic efficiency for steam turbine
+fp.set_attr(eta_s=0.75) # Setting isentropic efficiency for feed pump
 
 c11.set_attr(T=20, p=1.2, fluid={'water': 1})
-c12.set_attr(T=30)
-c1.set_attr(T=600, p=150, m=10, fluid={'R1234yf': 1})
-c2.set_attr(p=0.1)
+c12.set_attr(T=25)
+c21.set_attr(T=150, p=2.0, fluid={'water': 1})
+c22.set_attr(T=100)
+c1.set_attr(T=90, p=30, m=10, fluid={'R1234yf': 1})
+c2.set_attr(p=7)
 
 my_plant.solve(mode='design')
 my_plant.print_results()
@@ -65,4 +69,4 @@ my_plant.add_busses(powergen)
 
 my_plant.solve(mode='design')
 my_plant.print_results()
-my_plant.save("SRC_result")
+my_plant.save("Validation_result")
