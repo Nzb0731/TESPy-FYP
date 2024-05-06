@@ -33,6 +33,15 @@ from tespy.tools.helpers import bus_char_evaluation
 from tespy.tools.helpers import newton_with_kwargs
 
 
+def component_registry(type):
+    component_registry.items[type.__name__] = type
+    return type
+
+
+component_registry.items = {}
+
+
+@component_registry
 class Component:
     r"""
     Class Component is the base class of all TESPy components.
@@ -286,13 +295,13 @@ class Component:
             logger.error(msg)
             raise KeyError(msg)
 
-    def serialize(self):
+    def _serialize(self):
         export = {}
         for k in self._serializable():
             export.update({k: self.get_attr(k)})
         for k in self.parameters:
             data = self.get_attr(k)
-            export.update({k: data.serialize()})
+            export.update({k: data._serialize()})
 
         return {self.label: export}
 
@@ -488,10 +497,9 @@ class Component:
                 return v / self.inl[inconn].v.design
             elif param == 'pr':
                 return (
-                    (self.outl[outconn].p.val_SI *
-                     self.inl[inconn].p.design) /
-                    (self.inl[inconn].p.val_SI *
-                     self.outl[outconn].p.design))
+                    (self.outl[outconn].p.val_SI * self.inl[inconn].p.design)
+                    / (self.inl[inconn].p.val_SI * self.outl[outconn].p.design)
+                )
             else:
                 msg = (
                     f"The parameter {param}) is not available for "
