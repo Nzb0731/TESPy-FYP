@@ -205,7 +205,7 @@ class UserDefinedEquation:
         >>> from tespy.components import Source, Sink, Pipe
         >>> from tespy.networks import Network
         >>> from tespy.connections import Connection
-        >>> from tespy.tools.helpers import UserDefinedEquation
+        >>> from tespy.tools import UserDefinedEquation
         >>> from tespy.tools import CharLine
         >>> from tespy.tools.fluid_properties import T_mix_ph, v_mix_ph
         >>> nw = Network(p_unit='bar', T_unit='C')
@@ -524,7 +524,7 @@ def newton_with_kwargs(
     function = function_kwargs["function"]
     relax = 1
 
-    if abs(target_value) <= 1e-6:
+    if tol_mode == "rel" and abs(target_value) <= 2 * tol_rel:
         tol_mode = "abs"
 
     while expr:
