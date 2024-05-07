@@ -95,3 +95,17 @@ ax.set_ylabel('Temperature, T [K]', fontsize=14)
 ax.set_title('T-s Diagram for ORC System', fontsize=18)
 plt.tight_layout()
 fig.savefig('orc_TS_diagram.svg')
+
+# %%[sec_5]
+from tespy.connections import Bus
+powergen = Bus("electrical power output")
+
+powergen.add_comps(
+    {"comp": tu, "char": 1, "base": "component"},
+    {"comp": fp, "char": 1, "base": "bus"},
+)
+my_plant.add_busses(powergen)
+
+my_plant.solve(mode='design')
+my_plant.print_results()
+my_plant.save("ORC_result")
