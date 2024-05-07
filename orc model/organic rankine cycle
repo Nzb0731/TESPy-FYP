@@ -109,3 +109,57 @@ my_plant.add_busses(powergen)
 my_plant.solve(mode='design')
 my_plant.print_results()
 my_plant.save("ORC_result")
+
+# %%[sec_6]
+my_plant.set_attr(iterinfo=False)
+powergen.set_attr(P=None)
+
+data = {
+    'm_workingfluid': np.linspace(10, 60, 6),
+    'P_boiler': np.linspace(20, 30, 6),
+    'P_condenser': np.linspace(7, 17, 6),
+    'm_coolingfluid': np.linspace(20, 70, 6),
+}
+
+eta = {
+    'm_workingfluid':[],
+    'P_boiler': [],
+    'P_condenser': [],
+    'm_coolingfluid':[],
+}
+power = {
+    'm_workingfluid':[],
+    'P_boiler': [],
+    'P_condenser': [],
+    'm_coolingfluid':[],
+}
+
+for i in data['m_workingfluid']:
+    c1.set_attr(m=i)
+    my_plant.solve('design')
+    eta['m_workingfluid'] += [abs(powergen.P.val) / sg.Q.val * 100]
+    power['m_workingfluid'] += [abs(powergen.P.val) / 1e3]
+c1.set_attr(m=10)
+
+for i in data['P_boiler']:
+    c1.set_attr(p=i)
+    my_plant.solve('design')
+    eta['P_boiler'] += [abs(powergen.P.val) / sg.Q.val * 100]
+    power['P_boiler'] += [abs(powergen.P.val) / 1e3]
+c1.set_attr(p=30)
+
+for i in data['P_condenser']:
+    c2.set_attr(p=i)
+    my_plant.solve('design')
+    eta['P_condenser'] += [abs(powergen.P.val) / sg.Q.val * 100]
+    power['P_condenser'] += [abs(powergen.P.val) / 1e3]
+c2.set_attr(p=7)
+
+c12.set_attr(T=None)
+for i in data['m_coolingfluid']:
+    c11.set_attr(m=i)
+    my_plant.solve('design')
+    eta['m_coolingfluid'] += [abs(powergen.P.val) / sg.Q.val * 100]
+    power['m_coolingfluid'] += [abs(powergen.P.val) / 1e3]
+c12.set_attr(T=25)
+c11.set_attr(m=None)
