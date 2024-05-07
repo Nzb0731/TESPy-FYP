@@ -49,5 +49,13 @@ c22.set_attr(T=100)
 c1.set_attr(T=90, p=30, m=10, fluid={'R1234yf': 1})
 c2.set_attr(p=7)
 
-my_plant.solve(mode='design')
-my_plant.print_results()
+def run_orc_model():
+    my_plant.solve(mode='design')
+    my_plant.print_results()
+    result_dict = {}
+    result_dict.update(
+        {cp.label: cp.get_plotting_data()[1] for cp in my_plant.comps['object']
+         if cp.get_plotting_data() is not None})
+    return result_dict 
+
+orc_result = run_orc_model()
