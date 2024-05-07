@@ -175,3 +175,28 @@ results_df = pd.DataFrame({'m_workingfluid': eta['m_workingfluid'],
                            'Power_P_condenser': power['P_condenser'],
                            'Power_m_coolingfluid': power['m_coolingfluid']})
 results_df.to_csv('orc_simulation_result.csv', index=False)
+
+# %%[sec_8]
+plt.rc('font', **{'size': 18})
+fig, ax = plt.subplots(2, 4, figsize=(25, 12.5), sharex='col', sharey='row')
+ax = ax.flatten()
+[a.grid() for a in ax]
+
+i = 0
+for key in data: 
+    ax[i].scatter(data[key], eta[key], s=100, color="#1f567d")
+    ax[i].plot(data[key], eta[key], color="#1f567d")
+    ax[i + 4].scatter(data[key], power[key], s=100, color="#18a999")
+    ax[i + 4].plot(data[key], power[key], color="#18a999")
+    i += 1
+
+ax[0].set_ylabel('Efficiency (%)')
+ax[4].set_ylabel('Power (kW)')
+ax[4].set_xlabel('Working Fluid Flow Rate (kg/s)')
+ax[5].set_xlabel('Boiler Pressure (bar)')
+ax[6].set_xlabel('Condenser Pressure (bar)')
+ax[7].set_xlabel('Cooling Fluid Flow Rate (kg/s)')
+plt.tight_layout()
+
+fig.savefig('orc_simulation_plot.svg')
+plt.close()
