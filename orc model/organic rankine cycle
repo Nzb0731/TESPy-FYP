@@ -59,3 +59,39 @@ def run_orc_model():
     return result_dict 
 
 orc_result = run_orc_model()
+
+# %%[sec_4]
+from fluprodia import FluidPropertyDiagram
+import matplotlib.pyplot as plt
+import numpy as np
+
+diagram = FluidPropertyDiagram('R1234yf')
+diagram.set_unit_system(T='°C', p='bar', h='kJ/kg')
+
+for key, data in orc_result.items():
+   orc_result[key]['datapoints'] = diagram.calc_individual_isoline(**data)
+
+fig, ax = plt.subplots(1, figsize=(20, 10))
+mydata = {
+    'Q': {'values': np.linspace(0, 1, 2)},
+    'T': {
+        'values': np.arange(-25, 150, 25),
+        'style': {'color': '#000000'}
+    },
+    'v': {'values': np.array([])}
+}
+
+diagram.set_isolines(T=mydata["T"]["values"], Q=mydata["Q"]["values"], v=mydata["v"]["values"])
+diagram.calc_isolines()
+diagram.draw_isolines(fig, ax, 'Ts', x_min=900, x_max=1800, y_min=0, y_max=125)
+
+for key in orc_result.keys():
+    datapoints = orc_result[key]['datapoints']
+    _ = ax.plot(datapoints['s'], datapoints['T'], color='#ff0000')
+    _ = ax.scatter(datapoints['s'][0], datapoints['T'][0], color='#ff0000')
+
+ax.set_xlabel('Entropy, s [J/kg.K]', fontsize=14)
+ax.set_ylabel('Temperature, T [K]', fontsize=14)
+ax.set_title('T-s Diagram for ORC System', fontsize=18)
+plt.tight_layout()
+fig.savefig('orc_TS_diagram.svg')
