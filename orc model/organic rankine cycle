@@ -163,3 +163,15 @@ for i in data['m_coolingfluid']:
     power['m_coolingfluid'] += [abs(powergen.P.val) / 1e3]
 c12.set_attr(T=25)
 c11.set_attr(m=None)
+
+# %%[sec_7]
+import pandas as pd
+results_df = pd.DataFrame({'m_workingfluid': eta['m_workingfluid'],
+                           'P_boiler': eta['P_boiler'],
+                           'P_condenser': eta['P_condenser'],
+                           'm_coolingfluid': eta['m_coolingfluid'],
+                           'Power_m_workingfluid': power['m_workingfluid'],
+                           'Power_P_boiler': power['P_boiler'],
+                           'Power_P_condenser': power['P_condenser'],
+                           'Power_m_coolingfluid': power['m_coolingfluid']})
+results_df.to_csv('orc_simulation_result.csv', index=False)
