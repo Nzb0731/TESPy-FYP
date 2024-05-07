@@ -6,17 +6,19 @@ my_plant = Network()
 my_plant.set_attr(T_unit='C', p_unit='bar', h_unit='kJ / kg')
 # %%[sec_2]
 from tespy.components import (
-    CycleCloser, Pump, Condenser, Turbine, SimpleHeatExchanger, Source, Sink
+    CycleCloser, Pump, Condenser, Turbine, HeatExchanger, Source, Sink
 )
 
 cc = CycleCloser('cycle closer')
-sg = SimpleHeatExchanger('steam generator')
+sg = HeatExchanger('steam generator')
 mc = Condenser('main condenser')
 tu = Turbine('steam turbine')
 fp = Pump('feed pump')
 
 cwso = Source('cooling water source')
 cwsi = Sink('cooling water sink')
+stso = Source('Steam Source')
+stsi = Sink('Steam Sink')
 
 from tespy.connections import Connection
 
@@ -30,8 +32,10 @@ my_plant.add_conns(c1, c2, c3, c4, c0)
 
 c11 = Connection(cwso, 'out1', mc, 'in2', label='11')
 c12 = Connection(mc, 'out2', cwsi, 'in1', label='12')
+c21 = Connection(stso, 'out1', sg, 'in2', label='21')
+c22 = Connection(sg, 'out2', stsi, 'in1', label='22')
 
-my_plant.add_conns(c11, c12)
+my_plant.add_conns(c11, c12, c21, c22)
 # %%[sec_3]
 mc.set_attr(pr1=1, pr2=0.98)
 sg.set_attr(pr=0.9)
