@@ -200,3 +200,30 @@ plt.tight_layout()
 
 fig.savefig('orc_simulation_plot.svg')
 plt.close()
+
+# %%[sec_9]
+x_axis_labels = {
+    'm_workingfluid': 'Working Fluid Flow Rate (kg/s)',
+    'P_boiler': 'Boiler Pressure (bar)',
+    'P_condenser': 'Condenser Pressure (bar)',
+    'm_coolingfluid': 'Cooling Fluid Flow Rate (kg/s)'
+}
+
+for key in data:
+    fig, ax = plt.subplots(1, 2, figsize=(20, 10))
+
+    ax[0].scatter(data[key], eta[key], s=100, color="#1f567d")
+    ax[0].plot(data[key], eta[key], color="#1f567d")
+    ax[0].set_ylabel('Efficiency (%)')
+
+    ax[1].scatter(data[key], power[key], s=100, color="#18a999")
+    ax[1].plot(data[key], power[key], color="#18a999")
+    ax[1].set_ylabel('Power (kW)')
+
+    ax[0].set_xlabel(x_axis_labels[key])
+    ax[1].set_xlabel(x_axis_labels[key])
+
+    plt.tight_layout()
+
+    fig.savefig(f'orc_simulation_plot_{key}.svg')
+    plt.close()
