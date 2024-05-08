@@ -1,14 +1,24 @@
-# %%[sec_1]
+# %%[Sec_1: Importing necessary libraries]
+from fluprodia import FluidPropertyDiagram
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
+# Importing TESPy libraries for defining ORC components and connections
 from tespy.networks import Network
+from tespy.components import (CycleCloser, Pump, Condenser, Turbine, HeatExchanger, Source, Sink)
+from tespy.connections import Connection
 
-# create a network object with R134a as fluid
-my_plant = Network()
-my_plant.set_attr(T_unit='C', p_unit='bar', h_unit='kJ / kg')
-# %%[sec_2]
-from tespy.components import (
-    CycleCloser, Pump, Condenser, Turbine, HeatExchanger, Source, Sink
-)
+# %%[Sec_2: Initial Setup]
+diagram = FluidPropertyDiagram('R1234yf') # Creating a fluid property diagram for R1234yf
+diagram.set_unit_system(T='°C', p='bar', h='kJ/kg') # Setting unit system for the diagram
 
+my_plant = Network() # Creating a TESPy network object
+my_plant.set_attr(T_unit='C', p_unit='bar', h_unit='kJ / kg') # Setting unit system for the network
+my_plant.set_attr(iterinfo=False) # Disabling iteration information display during solving
+
+# %%[Sec_3: Setting components and establishing connections]
+# Defining components and connections for the ORC system
 cc = CycleCloser('cycle closer')
 sg = HeatExchanger('steam generator')
 mc = Condenser('main condenser')
@@ -20,27 +30,27 @@ cwsi = Sink('cooling water sink')
 stso = Source('Steam Source')
 stsi = Sink('Steam Sink')
 
-from tespy.connections import Connection
-
-c1 = Connection(cc, 'out1', tu, 'in1', label='1')
-c2 = Connection(tu, 'out1', mc, 'in1', label='2')
-c3 = Connection(mc, 'out1', fp, 'in1', label='3')
-c4 = Connection(fp, 'out1', sg, 'in1', label='4')
-c0 = Connection(sg, 'out1', cc, 'in1', label='0')
-
-my_plant.add_conns(c1, c2, c3, c4, c0)
+# Creating connections between components
+c1 = Connection(cc, 'out1', tu, 'in1', label='1') # Connection from cycle closer to steam turbine
+c2 = Connection(tu, 'out1', mc, 'in1', label='2') # Connection from steam turbine to main condenser
+c3 = Connection(mc, 'out1', fp, 'in1', label='3') # Connection from main condenser to feed pump  
+c4 = Connection(fp, 'out1', sg, 'in1', label='4') # Connection from feed pump to steam generator
+c0 = Connection(sg, 'out1', cc, 'in1', label='0') # Connection from steam generator to cycle closer
 
 c11 = Connection(cwso, 'out1', mc, 'in2', label='11')
 c12 = Connection(mc, 'out2', cwsi, 'in1', label='12')
 c21 = Connection(stso, 'out1', sg, 'in2', label='21')
 c22 = Connection(sg, 'out2', stsi, 'in1', label='22')
 
-my_plant.add_conns(c11, c12, c21, c22)
-# %%[sec_3]
-mc.set_attr(pr1=0.98, pr2=1)
-sg.set_attr(pr1=0.98, pr2=1)
-tu.set_attr(eta_s=0.9)
-fp.set_attr(eta_s=0.75)
+# Adding connections to the network
+my_plant.add_conns(c1, c2, c3, c4, c0) # Adding primary connections
+my_plant.add_conns(c11, c12, c21, c22) # Adding secondary connections
+
+# %%[Sec_4: Setting Design Parameters]
+mc.set_attr(pr1=0.98, pr2=1) # Setting pressure ratios for main condenser
+sg.set_attr(pr1=0.98, pr2=1) # Setting pressure ratios for steam generator
+tu.set_attr(eta_s=0.9) # Setting isentropic efficiency for steam turbine
+fp.set_attr(eta_s=0.75) # Setting isentropic efficiency for feed pump
 
 c11.set_attr(T=20, p=1.2, fluid={'water': 1})
 c12.set_attr(T=25)
@@ -49,28 +59,30 @@ c22.set_attr(T=100)
 c1.set_attr(T=90, p=30, m=10, fluid={'R1234yf': 1})
 c2.set_attr(p=7)
 
+# %%[Sec_5: Defining the model solver and calculation]
 def run_orc_model():
+    # Solve the network in design mode and print results
     my_plant.solve(mode='design')
     my_plant.print_results()
+    # Initializing dictionary to store results
     result_dict = {}
+    # Updating results dictionary with plotting data for components
     result_dict.update(
         {cp.label: cp.get_plotting_data()[1] for cp in my_plant.comps['object']
          if cp.get_plotting_data() is not None})
+    # Returning the results dictionary
     return result_dict 
 
+# Running the ORC model and calculating results
 orc_result = run_orc_model()
 
-# %%[sec_4]
-from fluprodia import FluidPropertyDiagram
-import matplotlib.pyplot as plt
-import numpy as np
-
-diagram = FluidPropertyDiagram('R1234yf')
-diagram.set_unit_system(T='°C', p='bar', h='kJ/kg')
-
+# %%[Sec_6: Generating T-s Diagram]
+# Iterate over the results obtained from TESPy simulation
 for key, data in orc_result.items():
+   # Calculate individual isolines for T-s diagram
    orc_result[key]['datapoints'] = diagram.calc_individual_isoline(**data)
 
+# Create a figure and axis for plotting T-s diagram
 fig, ax = plt.subplots(1, figsize=(20, 10))
 mydata = {
     'Q': {'values': np.linspace(0, 1, 2)},
@@ -81,46 +93,59 @@ mydata = {
     'v': {'values': np.array([])}
 }
 
+# Set isolines for T-s diagram
 diagram.set_isolines(T=mydata["T"]["values"], Q=mydata["Q"]["values"], v=mydata["v"]["values"])
 diagram.calc_isolines()
+
+# Draw isolines on the T-s diagram
 diagram.draw_isolines(fig, ax, 'Ts', x_min=900, x_max=1800, y_min=0, y_max=125)
 
+# Plot T-s curves for each component
 for key in orc_result.keys():
     datapoints = orc_result[key]['datapoints']
     _ = ax.plot(datapoints['s'], datapoints['T'], color='#ff0000')
     _ = ax.scatter(datapoints['s'][0], datapoints['T'][0], color='#ff0000')
 
+# Set labels and title for the T-s diagram
 ax.set_xlabel('Entropy, s [J/kg.K]', fontsize=14)
 ax.set_ylabel('Temperature, T [K]', fontsize=14)
 ax.set_title('T-s Diagram for ORC System', fontsize=18)
 plt.tight_layout()
+
+# Save the T-s diagram plot as an SVG file
 fig.savefig('orc_TS_diagram.svg')
 
-# %%[sec_5]
-from tespy.connections import Bus
-powergen = Bus("electrical power output")
+# %%[Sec_7: Assessing Electrical Power]
+from tespy.connections import Bus # Importing bus component from tespy library
+powergen = Bus("electrical power output") # Create a bus for electrical power output
 
+# Add components to the bus for power generation
 powergen.add_comps(
     {"comp": tu, "char": 1, "base": "component"},
     {"comp": fp, "char": 1, "base": "bus"},
 )
+# Add the power generation bus to the network
 my_plant.add_busses(powergen)
 
+# Solve the network to determine electrical power output
 my_plant.solve(mode='design')
 my_plant.print_results()
+
+# Save the results in the structure of csv.files
 my_plant.save("ORC_result")
 
-# %%[sec_6]
-my_plant.set_attr(iterinfo=False)
-powergen.set_attr(P=None)
+# %%[Sec_8: Parametric Analysis to analuze efficiency and power generation]
+powergen.set_attr(P=None) # Set electrical power attribute to None for parametric study
 
+# Define parameter ranges for the parametric study
 data = {
-    'm_workingfluid': np.linspace(10, 60, 6),
-    'P_boiler': np.linspace(20, 30, 6),
-    'P_condenser': np.linspace(7, 17, 6),
-    'm_coolingfluid': np.linspace(20, 70, 6),
+    'm_workingfluid': np.linspace(10, 60, 6),   # working fluid flow rate
+    'P_boiler': np.linspace(20, 30, 6),         # boiler pressure
+    'P_condenser': np.linspace(7, 17, 6),       # condenser pressure
+    'm_coolingfluid': np.linspace(20, 70, 6),   # cooling fluid flow rate
 }
 
+# Initialize dictionaries to store efficiency and power values for each parameter
 eta = {
     'm_workingfluid':[],
     'P_boiler': [],
@@ -134,38 +159,47 @@ power = {
     'm_coolingfluid':[],
 }
 
+# Performing parametric study for each parameter
+# Parameter 1: Working fluid flow rate
 for i in data['m_workingfluid']:
     c1.set_attr(m=i)
     my_plant.solve('design')
     eta['m_workingfluid'] += [abs(powergen.P.val) / sg.Q.val * 100]
     power['m_workingfluid'] += [abs(powergen.P.val) / 1e3]
+# Reset working fluid flow rate to base value
 c1.set_attr(m=10)
 
+# Parameter 2: Boiler Pressure
 for i in data['P_boiler']:
     c1.set_attr(p=i)
     my_plant.solve('design')
     eta['P_boiler'] += [abs(powergen.P.val) / sg.Q.val * 100]
     power['P_boiler'] += [abs(powergen.P.val) / 1e3]
+# Reset boiler pressure to base value
 c1.set_attr(p=30)
 
+# Parameter 3: Condenser Pressure
 for i in data['P_condenser']:
     c2.set_attr(p=i)
     my_plant.solve('design')
     eta['P_condenser'] += [abs(powergen.P.val) / sg.Q.val * 100]
     power['P_condenser'] += [abs(powergen.P.val) / 1e3]
+# Reset condenser pressure to base value
 c2.set_attr(p=7)
 
+# Parameter 4: Cooling Fluid Flow Rate
 c12.set_attr(T=None)
 for i in data['m_coolingfluid']:
     c11.set_attr(m=i)
     my_plant.solve('design')
     eta['m_coolingfluid'] += [abs(powergen.P.val) / sg.Q.val * 100]
     power['m_coolingfluid'] += [abs(powergen.P.val) / 1e3]
+
+# Reset cooling fluid flow rate to base value
 c12.set_attr(T=25)
 c11.set_attr(m=None)
 
-# %%[sec_7]
-import pandas as pd
+# Creating a DataFrame from the dictionaries containing the results
 results_df = pd.DataFrame({'m_workingfluid': eta['m_workingfluid'],
                            'P_boiler': eta['P_boiler'],
                            'P_condenser': eta['P_condenser'],
@@ -174,14 +208,19 @@ results_df = pd.DataFrame({'m_workingfluid': eta['m_workingfluid'],
                            'Power_P_boiler': power['P_boiler'],
                            'Power_P_condenser': power['P_condenser'],
                            'Power_m_coolingfluid': power['m_coolingfluid']})
+
+# Export the DataFrame to a CSV file
 results_df.to_csv('orc_simulation_result.csv', index=False)
 
-# %%[sec_8]
-plt.rc('font', **{'size': 18})
+# %%[Sec_9: Creating combined plots for parametric analysis]
+plt.rc('font', **{'size': 18}) # Set font size for plots
+
+# Create subplots for efficiency and power variation with each parameter
 fig, ax = plt.subplots(2, 4, figsize=(25, 12.5), sharex='col', sharey='row')
 ax = ax.flatten()
 [a.grid() for a in ax]
 
+# Plot efficiency and power for each parameter
 i = 0
 for key in data: 
     ax[i].scatter(data[key], eta[key], s=100, color="#1f567d")
@@ -190,6 +229,7 @@ for key in data:
     ax[i + 4].plot(data[key], power[key], color="#18a999")
     i += 1
 
+# Set labels and title for the subplots
 ax[0].set_ylabel('Efficiency (%)')
 ax[4].set_ylabel('Power (kW)')
 ax[4].set_xlabel('Working Fluid Flow Rate (kg/s)')
@@ -198,10 +238,12 @@ ax[6].set_xlabel('Condenser Pressure (bar)')
 ax[7].set_xlabel('Cooling Fluid Flow Rate (kg/s)')
 plt.tight_layout()
 
+# Save the combined plot as an SVG file
 fig.savefig('orc_simulation_plot.svg')
 plt.close()
 
-# %%[sec_9]
+# %%[Sec_10: Creating separate plots for parametric analysis]
+# Define a dictionary to map parameter keys to their corresponding x-axis labels
 x_axis_labels = {
     'm_workingfluid': 'Working Fluid Flow Rate (kg/s)',
     'P_boiler': 'Boiler Pressure (bar)',
@@ -209,6 +251,7 @@ x_axis_labels = {
     'm_coolingfluid': 'Cooling Fluid Flow Rate (kg/s)'
 }
 
+# Create separate plots for efficiency and power variation with each parameter
 for key in data:
     fig, ax = plt.subplots(1, 2, figsize=(20, 10))
 
@@ -225,5 +268,6 @@ for key in data:
 
     plt.tight_layout()
 
+    # Save individual plots for each parameter as SVG files
     fig.savefig(f'orc_simulation_plot_{key}.svg')
     plt.close()
