@@ -1,5 +1,4 @@
-# %%[Sec_1: Importing necessary libraries]
-from fluprodia import FluidPropertyDiagram
+# %%[Sec_1: Importing necessary Python libraries]
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -8,6 +7,9 @@ import pandas as pd
 from tespy.networks import Network
 from tespy.components import (CycleCloser, Pump, Condenser, Turbine, HeatExchanger, Source, Sink)
 from tespy.connections import Connection
+
+# Importing FluProdia library to generate fluid property diagram
+from fluprodia import FluidPropertyDiagram
 
 # %%[Sec_2: Initial Setup]
 diagram = FluidPropertyDiagram('R1234yf') # Creating a fluid property diagram for R1234yf
