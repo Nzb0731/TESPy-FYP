@@ -116,11 +116,11 @@ for key in tespy_results.keys():
 ax.set_xlabel('Entropy, s [J/kg.K]', fontsize=16)
 ax.set_ylabel('Temperature, T [oC]', fontsize=16)
 ax.set_title('T-s Diagram for ORC System', fontsize=20)
-plt.tight_layout()
 
 # Set font size for the x-axis and y-axis ticks
 ax.tick_params(axis='x', labelsize=12)
 ax.tick_params(axis='y', labelsize=12)
+plt.tight_layout()
 
 # Save the T-s diagram plot as an SVG file
 fig.savefig('Ts_fyp.svg')
