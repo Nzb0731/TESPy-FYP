@@ -88,30 +88,37 @@ for key, data in orc_result.items():
 fig, ax = plt.subplots(1, figsize=(20, 10))
 mydata = {
     'Q': {'values': np.linspace(0, 1, 2)},
-    'T': {
-        'values': np.arange(-25, 150, 25),
-        'style': {'color': '#000000'}
-    },
-    'v': {'values': np.array([])}
+    'P': {'values': np.linspace(0, 40, 5)},
+    'T': {'values': np.arange(0, 150, 25)},
+    'v': {'values': np.array([])},
+    'h': {'values': np.array([])}
 }
 
 # Set isolines for T-s diagram
-diagram.set_isolines(T=mydata["T"]["values"], Q=mydata["Q"]["values"], v=mydata["v"]["values"])
+diagram.set_isolines(T=mydata["T"]["values"], Q=mydata["Q"]["values"], v=mydata["v"]["values"], p=mydata["P"]["values"], h=mydata["h"]["values"])
 diagram.calc_isolines()
 
 # Draw isolines on the T-s diagram
-diagram.draw_isolines(fig, ax, 'Ts', x_min=900, x_max=1800, y_min=0, y_max=125)
+diagram.draw_isolines(fig, ax, 'Ts', x_min=1050, x_max=1650, y_min=10, y_max=110)
+
+# Adjust the font size of the isoline labels
+for text in ax.texts:
+    text.set_fontsize(10)
 
 # Plot T-s curves for each component
 for key in orc_result.keys():
     datapoints = orc_result[key]['datapoints']
-    _ = ax.plot(datapoints['s'], datapoints['T'], color='#ff0000')
+    _ = ax.plot(datapoints['s'], datapoints['T'], color='#ff0000', linewidth=2)
     _ = ax.scatter(datapoints['s'][0], datapoints['T'][0], color='#ff0000')
 
 # Set labels and title for the T-s diagram
-ax.set_xlabel('Entropy, s [J/kg.K]', fontsize=14)
-ax.set_ylabel('Temperature, T [K]', fontsize=14)
-ax.set_title('T-s Diagram for ORC System', fontsize=18)
+ax.set_xlabel('Entropy, s [J/kg.K]', fontsize=16)
+ax.set_ylabel('Temperature, T [oC]', fontsize=16)
+ax.set_title('T-s Diagram for ORC System', fontsize=20)
+
+# Set font size for the x-axis and y-axis ticks
+ax.tick_params(axis='x', labelsize=12)
+ax.tick_params(axis='y', labelsize=12)
 plt.tight_layout()
 
 # Save the T-s diagram plot as an SVG file
