@@ -90,13 +90,12 @@ fig, ax = plt.subplots(1, figsize=(20, 10))
 mydata = {
     'Q': {'values': np.linspace(0, 1, 2)},
     'P': {'values': np.linspace(0, 40, 5)},
-    'T': {'values': np.arange(0, 150, 25)},
     'v': {'values': np.array([])},
     'h': {'values': np.array([])}
 }
 
 # Set isolines for T-s diagram
-diagram.set_isolines(T=mydata["T"]["values"], Q=mydata["Q"]["values"], v=mydata["v"]["values"], p=mydata["P"]["values"], h=mydata["h"]["values"])
+diagram.set_isolines(Q=mydata["Q"]["values"], v=mydata["v"]["values"], p=mydata["P"]["values"], h=mydata["h"]["values"])
 diagram.calc_isolines()
 
 # Draw isolines on the T-s diagram
