@@ -99,7 +99,7 @@ diagram.set_isolines(Q=mydata["Q"]["values"], v=mydata["v"]["values"], p=mydata[
 diagram.calc_isolines()
 
 # Draw isolines on the T-s diagram
-diagram.draw_isolines(fig, ax, 'Ts', x_min=1050, x_max=1650, y_min=10, y_max=110)
+diagram.draw_isolines(fig, ax, 'Ts', x_min=1050, x_max=1650, y_min=20, y_max=110)
 
 # Adjust the font size of the isoline labels
 for text in ax.texts:
