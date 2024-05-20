@@ -78,7 +78,26 @@ def run_orc_model():
 # Running the ORC model and calculating results
 orc_result = run_orc_model()
 
-# %%[Sec_6: Generating T-s Diagram]
+# %%[Sec_6: Assessing Electrical Power]
+from tespy.connections import Bus # Importing bus component from tespy library
+powergen = Bus("electrical power output") # Create a bus for electrical power output
+
+# Add components to the bus for power generation
+powergen.add_comps(
+    {"comp": tu, "char": 1, "base": "component"},
+    {"comp": fp, "char": 1, "base": "bus"},
+)
+# Add the power generation bus to the network
+my_plant.add_busses(powergen)
+
+# Solve the network to determine electrical power output
+my_plant.solve(mode='design')
+my_plant.print_results()
+
+# Save the results in the structure of csv.files
+my_plant.save("ORC_result")
+
+# %%[Sec_7: Generating T-s Diagram]
 # Iterate over the results obtained from TESPy simulation
 for key, data in orc_result.items():
    # Calculate individual isolines for T-s diagram
@@ -122,25 +141,6 @@ plt.tight_layout()
 
 # Save the T-s diagram plot as an SVG file
 fig.savefig('orc_TS_diagram.svg')
-
-# %%[Sec_7: Assessing Electrical Power]
-from tespy.connections import Bus # Importing bus component from tespy library
-powergen = Bus("electrical power output") # Create a bus for electrical power output
-
-# Add components to the bus for power generation
-powergen.add_comps(
-    {"comp": tu, "char": 1, "base": "component"},
-    {"comp": fp, "char": 1, "base": "bus"},
-)
-# Add the power generation bus to the network
-my_plant.add_busses(powergen)
-
-# Solve the network to determine electrical power output
-my_plant.solve(mode='design')
-my_plant.print_results()
-
-# Save the results in the structure of csv.files
-my_plant.save("ORC_result")
 
 # %%[Sec_8: Parametric Analysis to analuze efficiency and power generation]
 powergen.set_attr(P=None) # Set electrical power attribute to None for parametric study
