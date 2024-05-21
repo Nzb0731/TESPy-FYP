@@ -59,7 +59,7 @@ c11.set_attr(T=20, p=1.2, fluid={'water': 1})
 c12.set_attr(T=25)
 c21.set_attr(T=150, p=2.0, fluid={'water': 1})
 c22.set_attr(T=100)
-c1.set_attr(T=90, p=30, m=10, fluid={'R1234yf': 1})
+c1.set_attr(T=300, p=30, m=10, fluid={'R1234yf': 1})
 c2.set_attr(p=7)
 
 # Function to run ORC model and calculate results
@@ -99,7 +99,7 @@ diagram.set_isolines(Q=mydata["Q"]["values"], v=mydata["v"]["values"], p=mydata[
 diagram.calc_isolines()
 
 # Draw isolines on the T-s diagram
-diagram.draw_isolines(fig, ax, 'Ts', x_min=1050, x_max=1650, y_min=20, y_max=110)
+diagram.draw_isolines(fig, ax, 'Ts', x_min=1050, x_max=2250, y_min=20, y_max=320)
 
 # Adjust the font size of the isoline labels
 for text in ax.texts:
